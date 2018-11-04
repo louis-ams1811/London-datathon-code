@@ -32,6 +32,8 @@ WHERE
   unitdischargelocation = 'Death'
 AND
   pati.ethnicity in ('Caucasian','African American','Other/Unknown','Native American','Hispanic', 'Asian')
+-- AND 
+--  ActualVentdays < (pati.hospitaldischargeoffset/60/24)+2
 GROUP BY patientunitstayid,age,gender,   CASE WHEN pati.ethnicity != 'Caucasian' 
     THEN 'Non-Caucasian'
     ELSE 'Caucasian' END, dialysis, apachescore, region,
