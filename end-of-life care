@@ -1,0 +1,39 @@
+SELECT
+  pati.patientunitstayid,
+  pati.gender,
+  CASE WHEN pati.age = '> 89' THEN '93' ELSE pati.age END as Age,
+  CASE WHEN pati.ethnicity != 'Caucasian' 
+    THEN 'Non-Caucasian'
+    ELSE 'Caucasian' END as Ethnicity,
+  resu.apachescore,
+  CASE WHEN IFNULL(diag.icd9code,'0') = '0' THEN 0 ELSE 1 END as ESRD,
+  dial.dialysis,
+  resu.ActualVentdays,
+  hosp.teachingstatus,
+  hosp.hospitalid,
+  hosp.numbedscategory,
+  hosp.region,
+  pati.hospitaldischargeoffset/60/24 as dischargetimedays,
+  pati.hospitalAdmitOffset/60/24 as hospitalAdmitOffset ,
+  (pati.hospitaldischargeoffset - pati.hospitalAdmitOffset)/60/24 as hospitalFullDuration
+FROM
+  `physionet-data.eicu.patient` pati
+JOIN
+  `physionet-data.eicu.hospital` hosp ON hosp.hospitalid = pati.hospitalid
+JOIN
+  `physionet-data.eicu.apachepatientresult` resu ON resu.patientunitstayid = pati.patientunitstayid
+JOIN
+  `physionet-data.eicu.apacheapsvar` dial ON dial.patientunitstayid = pati.patientunitstayid
+LEFT JOIN 
+  `physionet-data.eicu.diagnosis` diag ON diag.patientunitstayid = pati.patientunitstayid 
+AND 
+  diag.icd9code like '%585.6%'
+WHERE
+  unitdischargelocation = 'Death'
+AND
+  pati.ethnicity in ('Caucasian','African American','Other/Unknown','Native American','Hispanic', 'Asian')
+GROUP BY patientunitstayid,age,gender,   CASE WHEN pati.ethnicity != 'Caucasian' 
+    THEN 'Non-Caucasian'
+    ELSE 'Caucasian' END, dialysis, apachescore, region,
+    ActualVentdays, teachingstatus, 
+    hospitalid,numbedscategory,pati.hospitaldischargeoffset/60/24,pati.hospitalAdmitOffset/60/24,icd9code,(pati.hospitaldischargeoffset - pati.hospitalAdmitOffset)/60/24;
